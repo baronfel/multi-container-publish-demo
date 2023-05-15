@@ -1,0 +1,10 @@
+services:
+  container-multi-target:
+    image: container-multi-target:1.0.0-linux-x64
+    ports:
+      - 8080:8080
+  
+  other-app:
+    image: other-app:1.0.0-linux-x64
+    ports:
+      - 8081:8080
