@@ -19,7 +19,7 @@
                         pushed to a registry or local daemon
       * ContainerRuntimeIdentifier - if we're building for a specific RID, we need to set this so that the
                                      containerization targets know what RID to build for
-      * RuntimeIdentifier - if we're building for a specific RID, we need to set this so that we get optimized 
+      * RuntimeIdentifier - if we're building for a specific RID, we need to set this so that we get optimized
                             RID-specific assets in the publish output
 
       NOTE: we could get away with setting `RuntimeIdentfier` here to control `ContainerRuntimeIdentifier` inference
@@ -34,7 +34,7 @@
         AdditionalProperties="TargetFramework=%(_TFMItems.Identity);
                               VersionSuffix=$([MSBuild]::GetTargetFrameworkVersion('%(_TFMItems.Identity)', 2))" />
     </ItemGroup>
-    
+
     <!-- TF but no TFMs -> single image (aka the default pathway) up until now -->
     <ItemGroup Condition="'$(TargetFramework)' != ''
                           and '$(RuntimeIdentifiers)' == ''">
@@ -45,12 +45,20 @@
     <ItemGroup Condition="'$(TargetFramework)' != ''
                           and '$(RuntimeIdentifiers)' != ''">
       <_RIDItems Include="$(RuntimeIdentifiers)" />
+      <_RIDItems Update="@(_RIDItems)">
+        <GoStyleArch>$([System.String]::new('%(Identity)').Replace('x64', 'amd64'))</GoStyleArch>
+      </_RIDItems>
+
       <_SingleContainerPublish Include="$(MSBuildProjectFullPath)"
         AdditionalProperties="ContainerRuntimeIdentifier=%(_RIDItems.Identity);
                               RuntimeIdentifier=%(_RIDItems.Identity);
-                              VersionSuffix=%(_RIDItems.Identity);" />
+                              VersionSuffix=%(_RIDItems.GoStyleArch);"
+        UndefineProperties="RuntimeIdentifiers"
+        />
     </ItemGroup>
-    
-    <MSBuild Projects="@(_SingleContainerPublish)" Targets="$(_RequiredContainerPublishTargets)" BuildInParallel="true" />
+
+    <MSBuild Projects="@(_SingleContainerPublish)"
+      Targets="$(_RequiredContainerPublishTargets)"
+      BuildInParallel="true" />
   </Target>
 </Project>
